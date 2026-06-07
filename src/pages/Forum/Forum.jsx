@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../../services/supabaseClient";
 import { getPosts, createPost, deletePost, createComment, deleteComment, toggleLike } from "../../services/postService"; 
 import styles from "./Forum.module.css";
 
 // Importamos los nuevos componentes
-import CreatePostForm from "./components/CreatePostForm";
-import PostCard from "./components/PostCard";
+import CreatePostForm from "./Component/CreatePostForm";
+import PostCard from "./Component/PostCard";
 
 function Forum() {
   const navigate = useNavigate();
@@ -74,6 +74,7 @@ function Forum() {
   else if (sortBy === "likesDesc") processedPosts.sort((a, b) => (b.post_likes?.length || 0) - (a.post_likes?.length || 0));
 
   // --- Renderizado Visual ---
+  // --- Renderizado Visual ---
   return (
     <div className={styles.container}>
       
@@ -82,44 +83,62 @@ function Forum() {
         <button onClick={handleLogout} className={styles.btnSecondary}>Cerrar Sesión</button>
       </header>
 
-      {/* Buscador y Orden */}
-      <div className={styles.controls}>
-        <input 
-          type="text" 
-          placeholder="🔍 Buscar por título o contenido..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={styles.inputSearch}
-        />
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={styles.selectFilter}>
-          <option value="dateDesc">Más recientes primero</option>
-          <option value="dateAsc">Más antiguos primero</option>
-          <option value="likesDesc">Más populares (Likes)</option>
-        </select>
-      </div>
-
-      {/* Componente Modular de Formulario */}
-      <CreatePostForm onCreate={handleCreatePost} />
-
-      <div>
-        <h3>{searchTerm ? "Resultados de búsqueda" : "Publicaciones"}</h3>
-        {processedPosts.length === 0 ? (
-          <p style={{ color: "var(--text-muted)" }}>No se encontraron publicaciones.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginTop: "1rem" }}>
-            {processedPosts.map((post) => (
-              <PostCard 
-                key={post.id} 
-                post={post} 
-                currentUser={currentUser}
-                onDeletePost={handleDeletePost}
-                onToggleLike={handleToggleLike}
-                onCreateComment={handleCreateComment}
-                onDeleteComment={handleDeleteComment}
-              />
-            ))}
+      {/* Aquí aplicamos el Grid Layout */}
+      <div className={styles.forumGrid}>
+        
+        {/* COLUMNA IZQUIERDA: Buscador y Lista de Posts */}
+        <main className={styles.mainContent}>
+          
+          <div className={styles.controls}>
+            <input 
+              type="text" 
+              placeholder="🔍 Buscar publicaciones..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={styles.inputSearch}
+            />
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={styles.selectFilter}>
+              <option value="dateDesc">Más recientes</option>
+              <option value="dateAsc">Más antiguos</option>
+              <option value="likesDesc">Más populares</option>
+            </select>
           </div>
-        )}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {processedPosts.length === 0 ? (
+              <p style={{ color: "var(--text-muted)" }}>No se encontraron publicaciones.</p>
+            ) : (
+              processedPosts.map((post) => (
+                <PostCard 
+                  key={post.id} 
+                  post={post} 
+                  currentUser={currentUser}
+                  onDeletePost={handleDeletePost}
+                  onToggleLike={handleToggleLike}
+                  onCreateComment={handleCreateComment}
+                  onDeleteComment={handleDeleteComment}
+                />
+              ))
+            )}
+          </div>
+
+        </main>
+
+        {/* COLUMNA DERECHA: Sidebar para Crear Posts y Widgets */}
+        <aside className={styles.sidebar}>
+          <CreatePostForm onCreate={handleCreatePost} />
+          
+          {/* Aquí a futuro podemos agregar más cosas de UI, como: */}
+          <div className={styles.card}>
+            <h4 style={{ marginTop: 0, color: "var(--text-main)" }}>Reglas del Foro</h4>
+            <ul style={{ fontSize: "0.9rem", color: "var(--text-muted)", paddingLeft: "1.2rem", margin: 0 }}>
+              <li>Mantén el respeto en la comunidad.</li>
+              <li>Busca antes de preguntar.</li>
+              <li>Usa un título descriptivo.</li>
+            </ul>
+          </div>
+        </aside>
+
       </div>
       
     </div>

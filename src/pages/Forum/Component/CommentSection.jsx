@@ -1,6 +1,6 @@
-
 import { useState } from "react";
 import styles from "../Forum.module.css";
+import { Trash2, Send } from "lucide-react";
 
 function CommentSection({ postId, comments, currentUser, onCreateComment, onDeleteComment }) {
   const [commentText, setCommentText] = useState("");
@@ -8,44 +8,42 @@ function CommentSection({ postId, comments, currentUser, onCreateComment, onDele
   const handleCommentSubmit = () => {
     if (!commentText.trim()) return;
     onCreateComment(postId, commentText);
-    setCommentText(""); // Limpiamos el input después de enviar
+    setCommentText(""); 
   };
 
   return (
     <div className={styles.commentsSection}>
       {comments && comments.map(comment => (
         <div key={comment.id} className={styles.commentItem}>
-          <p className={styles.commentContent}>{comment.content}</p>
-          <div className={styles.commentFooter}>
-            <small style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>
+          <div className={styles.commentHeader}>
+            <span className={styles.authorName} style={{ fontSize: "0.85rem" }}>
               {comment.profiles?.nombre} {comment.profiles?.apellido}
-            </small>
+            </span>
+            <span className={styles.dotSeparator} style={{ fontSize: "0.85rem" }}>•</span>
+            
+            {/* Botón eliminar al lado del nombre, discreto */}
             {currentUser?.id === comment.user_id && (
-              <button 
-                onClick={() => onDeleteComment(comment.id)} 
-                className={styles.btnDanger} 
-                style={{ fontSize: "0.8rem" }}
-              >
-                Eliminar
+              <button onClick={() => onDeleteComment(comment.id)} className={styles.btnGhostDanger} style={{ padding: 0 }}>
+                <Trash2 size={14} />
               </button>
             )}
           </div>
+          <p className={styles.commentContent}>{comment.content}</p>
         </div>
       ))}
       
-      {/* Input de Comentario */}
       <div className={styles.commentInputGroup}>
         <input 
           type="text" 
-          placeholder="Escribe una respuesta..." 
+          placeholder="Añadir una respuesta..." 
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           className={styles.input}
-          style={{ flex: 1, backgroundColor: "#FAFAF8" }}
-          onKeyDown={(e) => e.key === 'Enter' && handleCommentSubmit()} // Permite enviar con Enter
+          style={{ flex: 1, padding: "0.6rem 0.8rem", borderRadius: "20px" }}
+          onKeyDown={(e) => e.key === 'Enter' && handleCommentSubmit()} 
         />
-        <button onClick={handleCommentSubmit} className={styles.btnSecondary}>
-          Responder
+        <button onClick={handleCommentSubmit} className={styles.btnPrimary} style={{ borderRadius: "20px", padding: "0.6rem 1rem" }}>
+          <Send size={16} />
         </button>
       </div>
     </div>
