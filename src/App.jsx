@@ -5,7 +5,7 @@ import Register from './pages/Register/Register'
 function App() {
   return (
     // Por ahora, solo renderizamos la página de Login
-    <Login /> 
+    <Register/>
   )
 }
 

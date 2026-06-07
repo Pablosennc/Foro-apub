@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styles from "./Register.module.css"; 
 // 1. Importar el cliente de Supabase
-import { supabase } from "../../supabaseClient"; 
+import { supabase } from "../../services/supabaseClient"; 
 
 function Register() {
   const [nombre, setNombre] = useState("");
