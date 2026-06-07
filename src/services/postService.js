@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase } from '../services/supabaseClient';
 
 export const getPosts = async () => {
   const { data, error } = await supabase
@@ -16,7 +16,8 @@ export const getPosts = async () => {
         created_at,
         user_id,
         profiles (nombre, apellido)
-      )
+      ),
+      post_likes (user_id)
     `)
     .order("created_at", { ascending: false });
 
@@ -42,4 +43,15 @@ export const createComment = async (postId, content) => {
 export const deleteComment = async (commentId) => {
   const { error } = await supabase.from("comments").delete().eq("id", commentId);
   if (error) throw error;
+};
+
+// NUEVA FUNCIÓN: Maneja dar o quitar like
+export const toggleLike = async (postId, userId, hasLiked) => {
+  if (hasLiked) {
+    const { error } = await supabase.from("post_likes").delete().match({ post_id: postId, user_id: userId });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("post_likes").insert([{ post_id: postId, user_id: userId }]);
+    if (error) throw error;
+  }
 };

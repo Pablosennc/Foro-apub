@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
-import { getPosts, createPost, deletePost, createComment, deleteComment } from "../../services/postService" 
+import { getPosts, createPost, deletePost, createComment, deleteComment, toggleLike } from "../../services/postService"; 
 
 function Forum() {
   const navigate = useNavigate();
@@ -10,12 +10,11 @@ function Forum() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   
-  // Nuevos estados para filtros y comentarios
   const [searchTerm, setSearchTerm] = useState("");
-  const [commentInputs, setCommentInputs] = useState({}); // Guarda el texto del comentario para cada post
+  const [sortBy, setSortBy] = useState("dateDesc"); // dateDesc, dateAsc, likesDesc
+  const [commentInputs, setCommentInputs] = useState({}); 
 
   useEffect(() => {
-    // Obtener el usuario actual para saber qué posts puede borrar
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user));
     loadPosts();
   }, []);
@@ -52,12 +51,23 @@ function Forum() {
     }
   };
 
+  const handleToggleLike = async (postId, hasLiked) => {
+    if (!currentUser) return;
+    try {
+      // Optimización UX: podríamos actualizar el UI primero (Optimistic UI), pero por ahora refetch es más seguro
+      await toggleLike(postId, currentUser.id, hasLiked);
+      loadPosts();
+    } catch (error) {
+      alert("Error al procesar el like.");
+    }
+  };
+
   const handleCreateComment = async (postId) => {
     const text = commentInputs[postId];
     if (!text || !text.trim()) return;
     try {
       await createComment(postId, text);
-      setCommentInputs({ ...commentInputs, [postId]: "" }); // Limpiar el input
+      setCommentInputs({ ...commentInputs, [postId]: "" }); 
       loadPosts();
     } catch (error) {
       alert("No se pudo enviar el comentario.");
@@ -79,11 +89,21 @@ function Forum() {
     navigate("/login");
   };
 
-  // Lógica del filtro de búsqueda
-  const filteredPosts = posts.filter(post => 
+  // ----------------------------------------------------
+  // ESTADO DERIVADO: Filtro + Ordenamiento
+  // ----------------------------------------------------
+  let processedPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     post.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (sortBy === "dateDesc") {
+    processedPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (sortBy === "dateAsc") {
+    processedPosts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  } else if (sortBy === "likesDesc") {
+    processedPosts.sort((a, b) => (b.post_likes?.length || 0) - (a.post_likes?.length || 0));
+  }
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
@@ -94,15 +114,24 @@ function Forum() {
         </button>
       </header>
 
-      {/* Buscador */}
-      <div style={{ marginBottom: "2rem" }}>
+      {/* Controles: Buscador y Ordenamiento */}
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
         <input 
           type="text" 
-          placeholder="🔍 Filtrar publicaciones por título o contenido..." 
+          placeholder="🔍 Filtrar publicaciones..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: "100%", padding: "0.8rem", border: "1px solid var(--border-color)", borderRadius: "8px", fontSize: "1rem" }}
+          style={{ flex: 2, padding: "0.8rem", border: "1px solid var(--border-color)", borderRadius: "8px", fontSize: "1rem" }}
         />
+        <select 
+          value={sortBy} 
+          onChange={(e) => setSortBy(e.target.value)}
+          style={{ flex: 1, padding: "0.8rem", border: "1px solid var(--border-color)", borderRadius: "8px", fontSize: "1rem", backgroundColor: "white", cursor: "pointer" }}
+        >
+          <option value="dateDesc">Más recientes</option>
+          <option value="dateAsc">Más antiguos</option>
+          <option value="likesDesc">Más populares (Likes)</option>
+        </select>
       </div>
 
       <div style={{ backgroundColor: "var(--card-bg)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border-color)", marginBottom: "2rem" }}>
@@ -115,58 +144,74 @@ function Forum() {
       </div>
 
       <div>
-        <h3>{searchTerm ? "Resultados de búsqueda" : "Últimos hilos"}</h3>
-        {filteredPosts.length === 0 ? (
+        <h3>{searchTerm ? "Resultados de búsqueda" : "Publicaciones"}</h3>
+        {processedPosts.length === 0 ? (
           <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No se encontraron publicaciones.</p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
-            {filteredPosts.map((post) => (
-              <div key={post.id} style={{ backgroundColor: "var(--card-bg)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-                
-                {/* Cabecera del Post con Botón de Eliminar */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <h4 style={{ color: "var(--accent-color)", marginBottom: "0.5rem", fontSize: "1.2rem", marginTop: 0 }}>{post.title}</h4>
-                  {currentUser?.id === post.user_id && (
-                    <button onClick={() => handleDeletePost(post.id)} style={{ background: "none", border: "none", color: "red", cursor: "pointer", fontSize: "0.9rem" }}>🗑️ Eliminar</button>
-                  )}
-                </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginTop: "1rem" }}>
+            {processedPosts.map((post) => {
+              
+              // Verificamos si el usuario actual le dio like a este post específico
+              const hasLiked = post.post_likes?.some(like => like.user_id === currentUser?.id);
+              const likesCount = post.post_likes?.length || 0;
 
-                <p style={{ color: "var(--text-main)", whiteSpace: "pre-wrap", marginTop: "0.5rem" }}>{post.content}</p>
-                <small style={{ color: "var(--text-muted)", display: "block", marginTop: "1rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-                  Por: <strong>{post.profiles?.nombre} {post.profiles?.apellido}</strong> | Publicado el {new Date(post.created_at).toLocaleDateString()}
-                </small>
-
-                {/* Sección de Comentarios */}
-                <div style={{ marginTop: "1rem", paddingLeft: "1rem", borderLeft: "3px solid var(--border-color)" }}>
-                  {post.comments && post.comments.map(comment => (
-                    <div key={comment.id} style={{ marginBottom: "0.8rem" }}>
-                      <p style={{ margin: "0 0 0.2rem 0", fontSize: "0.95rem" }}>{comment.content}</p>
-                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                        <small style={{ color: "var(--text-muted)" }}>- {comment.profiles?.nombre} {comment.profiles?.apellido}</small>
-                        {currentUser?.id === comment.user_id && (
-                          <button onClick={() => handleDeleteComment(comment.id)} style={{ background: "none", border: "none", color: "red", cursor: "pointer", fontSize: "0.8rem", padding: 0 }}>Eliminar</button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              return (
+                <div key={post.id} style={{ backgroundColor: "var(--card-bg)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
                   
-                  {/* Input para nuevo comentario */}
-                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
-                    <input 
-                      type="text" 
-                      placeholder="Escribe un comentario..." 
-                      value={commentInputs[post.id] || ""}
-                      onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
-                      style={{ flex: 1, padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "4px" }}
-                    />
-                    <button onClick={() => handleCreateComment(post.id)} style={{ padding: "0.5rem 1rem", backgroundColor: "var(--text-muted)", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
-                      Comentar
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <h4 style={{ color: "var(--accent-color)", marginBottom: "0.5rem", fontSize: "1.2rem", marginTop: 0 }}>{post.title}</h4>
+                    {currentUser?.id === post.user_id && (
+                      <button onClick={() => handleDeletePost(post.id)} style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.9rem", fontWeight: "bold" }}>Eliminar</button>
+                    )}
+                  </div>
+
+                  <p style={{ color: "var(--text-main)", whiteSpace: "pre-wrap", marginTop: "0.5rem", lineHeight: "1.5" }}>{post.content}</p>
+                  
+                  {/* Fila de Metadatos y Botón de Like */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
+                    <small style={{ color: "var(--text-muted)" }}>
+                      Por: <strong>{post.profiles?.nombre} {post.profiles?.apellido}</strong> | {new Date(post.created_at).toLocaleDateString()}
+                    </small>
+                    
+                    <button 
+                      onClick={() => handleToggleLike(post.id, hasLiked)}
+                      style={{ background: hasLiked ? "var(--accent-color)" : "transparent", color: hasLiked ? "white" : "var(--text-main)", border: `1px solid ${hasLiked ? "var(--accent-color)" : "var(--border-color)"}`, borderRadius: "20px", padding: "0.3rem 0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.2s" }}
+                    >
+                      {hasLiked ? "❤️" : "🤍"} {likesCount}
                     </button>
                   </div>
-                </div>
 
-              </div>
-            ))}
+                  {/* Sección de Comentarios */}
+                  <div style={{ marginTop: "1.5rem", paddingLeft: "1rem", borderLeft: "3px solid var(--accent-color)" }}>
+                    {post.comments && post.comments.map(comment => (
+                      <div key={comment.id} style={{ marginBottom: "1rem", backgroundColor: "#fdfdfc", padding: "0.8rem", borderRadius: "6px" }}>
+                        <p style={{ margin: "0 0 0.4rem 0", fontSize: "0.95rem", color: "var(--text-main)" }}>{comment.content}</p>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <small style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>{comment.profiles?.nombre} {comment.profiles?.apellido}</small>
+                          {currentUser?.id === comment.user_id && (
+                            <button onClick={() => handleDeleteComment(comment.id)} style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.8rem", padding: 0 }}>Eliminar</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+                      <input 
+                        type="text" 
+                        placeholder="Escribe un comentario..." 
+                        value={commentInputs[post.id] || ""}
+                        onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
+                        style={{ flex: 1, padding: "0.6rem", border: "1px solid var(--border-color)", borderRadius: "4px", backgroundColor: "#FAFAF8" }}
+                      />
+                      <button onClick={() => handleCreateComment(post.id)} style={{ padding: "0.6rem 1rem", backgroundColor: "var(--text-main)", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "500" }}>
+                        Enviar
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
