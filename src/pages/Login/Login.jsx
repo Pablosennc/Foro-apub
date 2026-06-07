@@ -14,7 +14,7 @@ function Login() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <span>Foro APUB</span>
+        <span>Foro APUB UCT</span>
       </header>
 
       <main className={styles.container}>
@@ -41,7 +41,7 @@ function Login() {
               Iniciar Sesión
             </button>
           </form>
-          
+
           <div className={styles.linksContainer}>
             <button className={styles.linkButton}>¿Olvidaste tu contraseña?</button>
             <div className={styles.divider}></div>

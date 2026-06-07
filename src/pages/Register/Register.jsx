@@ -1,38 +1,55 @@
 import { useState } from "react";
-// Asumimos que creaste Register.module.css (puedes copiar los estilos de Login por ahora)
 import styles from "./Register.module.css"; 
+// 1. Importar el cliente de Supabase
+import { supabase } from "../../supabaseClient"; 
 
 function Register() {
-  // 1. Estados para los datos que mencionaste
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
-  // Estado para manejar los mensajes de error
   const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState(""); // Para mostrar éxito
 
-  const handleRegister = (e) => {
+  // 2. Hacer la función asíncrona
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setError(""); // Limpiamos errores previos
+    setError(""); 
+    setMensaje("");
 
-    // 2. Validación de campos vacíos
     if (!nombre || !apellido || !email || !password) {
       setError("Todos los campos son obligatorios.");
       return;
     }
 
-    // 3. Validación de Correo Institucional con Regex
     const regexCorreoUCT = /^[a-zA-Z0-9._%+-]+@alu\.uct\.cl$/;
-    
     if (!regexCorreoUCT.test(email)) {
       setError("Debes usar un correo institucional válido (@alu.uct.cl).");
       return;
     }
 
-    // Si pasa todas las validaciones, aquí conectaremos con la base de datos
-    console.log("Registrando usuario...");
-    console.log({ nombre, apellido, email, password });
+    // 3. Llamar a Supabase para registrar al usuario
+    const { data, error: supabaseError } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: {
+          nombre: nombre,
+          apellido: apellido,
+        }
+      }
+    });
+
+    if (supabaseError) {
+      setError(supabaseError.message);
+    } else {
+      setMensaje("¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.");
+      // Opcional: limpiar los campos
+      setNombre("");
+      setApellido("");
+      setEmail("");
+      setPassword("");
+    }
   }
 
   return (
@@ -80,8 +97,8 @@ function Register() {
               onChange={(e) => setPassword(e.target.value)}
             />
 
-            {/* Renderizado condicional del error: Si hay error, muéstralo */}
             {error && <p style={{ color: "red", fontSize: "0.85rem", marginTop: "-10px" }}>{error}</p>}
+            {mensaje && <p style={{ color: "green", fontSize: "0.85rem", marginTop: "-10px" }}>{mensaje}</p>}
 
             <button type="submit" className={styles.buttonPrimary}>
               Registrarse
