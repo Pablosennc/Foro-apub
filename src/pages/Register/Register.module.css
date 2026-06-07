@@ -76,3 +76,24 @@
 .buttonPrimary:hover {
   background-color: var(--accent-hover);
 }
+.linksContainer {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.linkButton:hover {
+  color: var(--accent-color);
+}

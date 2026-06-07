@@ -2,6 +2,7 @@ import { useState } from "react";
 import styles from "./Register.module.css"; 
 // 1. Importar el cliente de Supabase
 import { supabase } from "../../services/supabaseClient"; 
+import { useNavigate } from "react-router-dom";
 
 function Register() {
   const [nombre, setNombre] = useState("");
@@ -10,6 +11,7 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState(""); // Para mostrar éxito
+  const navigate = useNavigate();
 
   // 2. Hacer la función asíncrona
   const handleRegister = async (e) => {
@@ -104,6 +106,21 @@ function Register() {
               Registrarse
             </button>
           </form>
+
+          <div className={styles.linksContainer}>
+          <span style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
+            ¿Ya tienes cuenta?{" "}
+            <button 
+              type="button" 
+              className={styles.linkButton} 
+              onClick={() => navigate("/login")}
+              style={{ padding: 0, display: "inline-block" }}
+            >
+              Inicia sesión
+            </button>
+          </span>
+        </div>
+
         </div>
       </main>
     </div>

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import styles from "./Login.module.css";
-// 1. Importar Supabase
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
 
 function Login() {
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
   // 2. Estados para feedback
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -32,6 +33,7 @@ function Login() {
       console.error(supabaseError);
     } else {
       setMensaje("¡Inicio de sesión exitoso!");
+      Maps("/foro");
       console.log("Usuario logueado:", data.user);
       // Más adelante, aquí redirigiremos a la página principal del foro
     }
@@ -76,7 +78,9 @@ function Login() {
           <div className={styles.linksContainer}>
             <button className={styles.linkButton}>¿Olvidaste tu contraseña?</button>
             <div className={styles.divider}></div>
-            <button className={styles.linkButton}>Registrarse</button>
+            <button className={styles.linkButton} onClick={() => navigate("/register")}>
+              Registrarse
+            </button>
           </div>
         </div>
       </main>
