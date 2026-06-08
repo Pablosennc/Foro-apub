@@ -92,7 +92,7 @@ function Forum() {
           <div className={styles.controls}>
             <input 
               type="text" 
-              placeholder="🔍 Buscar publicaciones..." 
+              placeholder="Buscar publicaciones..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={styles.inputSearch}
