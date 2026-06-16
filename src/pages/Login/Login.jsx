@@ -76,12 +76,23 @@ function Login() {
           </form>
           
           <div className={styles.linksContainer}>
-            <button className={styles.linkButton}>¿Olvidaste tu contraseña?</button>
+            <button 
+              type="button" /* type="button" evita que envíen el formulario */
+              className={styles.linkButton} 
+              onClick={() => navigate('/forgot-password')}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
             <div className={styles.divider}></div>
-            <button className={styles.linkButton} onClick={() => navigate("/register")}>
+            <button 
+              type="button" 
+              className={styles.linkButton} 
+              onClick={() => navigate('/register')}
+            >
               Registrarse
             </button>
           </div>
+          
         </div>
       </main>
     </div>
