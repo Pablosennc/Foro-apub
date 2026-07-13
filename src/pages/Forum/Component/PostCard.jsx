@@ -43,7 +43,7 @@ function PostCard({
               
               {/* Renderizado condicional de la insignia */}
               {post.profiles?.rol === 'ccee' && (
-                <span className={styles.cceeBadge}>✓ CCEE</span>
+                <span className={styles.cceeBadge}>CCEE</span>
               )}
             </div>
 

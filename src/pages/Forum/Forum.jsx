@@ -140,6 +140,7 @@ function Forum() {
               <p style={{ color: "var(--text-muted)" }}>No se encontraron publicaciones.</p>
             ) : (
               processedPosts.map((post) => (
+                
                 <PostCard 
                   key={post.id} 
                   post={post} 

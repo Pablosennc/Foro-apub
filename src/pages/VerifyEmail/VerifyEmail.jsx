@@ -39,7 +39,7 @@ function VerifyEmail() {
     if (verifyError) {
       setError("El código es incorrecto o ha expirado.");
     } else {
-      setMensaje("¡Cuenta verificada exitosamente! Redirigiendo al login...");
+      setMensaje("¡Cuenta verificada exitosamente!");
       await supabase.auth.signOut(); // Limpiamos la sesión temporal
       setTimeout(() => navigate("/login"), 2000);
     }
@@ -61,9 +61,14 @@ function VerifyEmail() {
               placeholder="Código de 8 dígitos" 
               className={styles.input} 
               value={otpCode} 
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))} // Solo permite números
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
               maxLength="8"
-              style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem' }}
+              style={{ 
+                textAlign: 'center', 
+                fontSize: '1.2rem', 
+                // El truco de magia: solo aplica el espaciado si hay texto escrito
+                letterSpacing: otpCode.length > 0 ? '0.5rem' : 'normal' 
+              }}
             />
             {error && <p style={{ color: "red", fontSize: "0.85rem", marginTop: "-10px" }}>{error}</p>}
             {mensaje && <p style={{ color: "green", fontSize: "0.85rem", marginTop: "-10px", fontWeight: "bold" }}>{mensaje}</p>}
