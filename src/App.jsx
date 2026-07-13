@@ -4,6 +4,7 @@ import Register from './pages/Register/Register';
 import Forum from './pages/Forum/Forum';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword'; // NUEVO
 import ResetPassword from './pages/ResetPassword/ResetPassword';     // NUEVO
+import VerifyEmail from './pages/VerifyEmail/VerifyEmail'; // NUEVO
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/foro" element={<Forum />} />
+        <Route path="/verificar" element={<VerifyEmail />} /> {/* NUEVO */}
         
         {/* Nuevas rutas de recuperación */}
         <Route path="/forgot-password" element={<ForgotPassword />} />

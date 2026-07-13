@@ -37,15 +37,25 @@ function Forum() {
       const data = await getPosts();
       setPosts(data);
     } catch (error) {
-      console.error("Error detallado de Supabase:", error);
-      alert("Error de Supabase: " + error.message); // Ahora la alerta nos dirá el problema real
+      alert("No se pudieron cargar las publicaciones.");
     }
   };
 
   // --- Funciones orquestadoras (se pasan a los componentes como props) ---
   const handleCreatePost = async (title, content) => {
-    try { await createPost(title, content); loadPosts(); } 
-    catch (err) { alert("Error al publicar."); }
+    try { 
+      await createPost(title, content); 
+      loadPosts(); 
+    } 
+    catch (err) { 
+      console.error("Error al crear post:", err);
+      // Verificamos si el error viene de nuestro candado en la base de datos
+      if (err.message && err.message.includes("RATE_LIMIT_EXCEEDED")) {
+        alert("Has alcanzado el límite de 5 publicaciones por día. ¡Vuelve mañana para seguir participando!");
+      } else {
+        alert("Hubo un error al publicar. Inténtalo de nuevo.");
+      }
+    }
   };
 
   const handleDeletePost = async (postId) => {

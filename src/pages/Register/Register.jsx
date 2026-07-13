@@ -45,14 +45,7 @@ function Register() {
     if (supabaseError) {
       setError(supabaseError.message);
     } else {
-      setMensaje("¡Registro exitoso!");
-      // Opcional: limpiar los campos
-      setNombre("");
-      setApellido("");
-      setEmail("");
-      setPassword("");
-      // Opcional: redirigir al usuario a la página de inicio de sesión
-      navigate("/login");
+      navigate("/verificar", { state: { email: email } });
     }
   }
 
