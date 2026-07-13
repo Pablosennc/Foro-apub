@@ -23,9 +23,21 @@ function CommentSection({ postId, comments, currentUser, onCreateComment, onDele
             
             <div className={styles.commentBubble}>
               <div className={styles.commentHeader}>
-                <span className={styles.authorName} style={{ fontSize: "0.85rem" }}>
-                  {comment.profiles?.nombre} {comment.profiles?.apellido}
-                </span>
+                {/* Agrupamos nombre e insignia horizontalmente */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <span className={styles.authorName} style={{ fontSize: "0.85rem" }}>
+                    {comment.profiles?.nombre} {comment.profiles?.apellido}
+                  </span>
+
+                  {/* Renderizado condicional de la insignia para el comentario */}
+                  {comment.profiles?.rol === 'ccee' && (
+                    <span className={styles.cceeBadge} style={{ fontSize: "0.6rem", padding: "0.1rem 0.4rem", letterSpacing: "1.2px"
+                      
+                     }}>
+                      CCEE
+                    </span>
+                  )}
+                </div>
                 
                 {currentUser?.id === comment.user_id && (
                   <button onClick={() => onDeleteComment(comment.id)} className={styles.btnGhostDanger} style={{ padding: 0 }}>

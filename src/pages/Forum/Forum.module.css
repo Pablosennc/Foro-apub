@@ -233,6 +233,21 @@
 }
 
 .authorName { font-weight: 600; color: #374151; font-size: 0.95rem; }
+
+.cceeBadge {
+  background-color: var(--accent-color);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(214, 125, 62, 0.2);
+}
+
 .postDate { font-size: 0.8rem; color: #6b7280; }
 
 .postContent { 

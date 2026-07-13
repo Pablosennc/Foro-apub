@@ -9,13 +9,14 @@ export const getPosts = async () => {
       content,
       created_at,
       user_id,
-      profiles (nombre, apellido),
+      oculto,
+      profiles (nombre, apellido, rol),
       comments (
         id,
         content,
         created_at,
         user_id,
-        profiles (nombre, apellido)
+        profiles (nombre, apellido, rol)
       ),
       post_likes (user_id)
     `)
@@ -54,4 +55,13 @@ export const toggleLike = async (postId, userId, hasLiked) => {
     const { error } = await supabase.from("post_likes").insert([{ post_id: postId, user_id: userId }]);
     if (error) throw error;
   }
+};
+
+// NUEVA FUNCIÓN: Permite al CCEE ocultar o desocultar un post
+export const toggleHidePost = async (postId, currentState) => {
+  const { error } = await supabase
+    .from("posts")
+    .update({ oculto: !currentState }) // Invierte el estado (si era true, pasa a false)
+    .eq("id", postId);
+  if (error) throw error;
 };

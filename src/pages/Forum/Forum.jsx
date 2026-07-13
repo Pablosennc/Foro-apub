@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
-import { getPosts, createPost, deletePost, createComment, deleteComment, toggleLike } from "../../services/postService"; 
+import { getPosts, createPost, deletePost, createComment, deleteComment, toggleLike, toggleHidePost } from "../../services/postService"; 
 import styles from "./Forum.module.css";
 
 // Importamos los nuevos componentes
@@ -11,21 +11,34 @@ import PostCard from "./Component/PostCard";
 function Forum() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentUserRole, setCurrentUserRole] = useState("estudiante");
   const [posts, setPosts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("dateDesc"); 
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user));
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (data.user) {
+        setCurrentUser(data.user);
+        // Consultamos el rol del usuario en la base de datos
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("rol")
+          .eq("id", data.user.id)
+          .single();
+        if (profile) setCurrentUserRole(profile.rol);
+      }
+    });
     loadPosts();
-  }, []);
+  }, [])
 
   const loadPosts = async () => {
     try {
       const data = await getPosts();
       setPosts(data);
     } catch (error) {
-      alert("No se pudieron cargar las publicaciones.");
+      console.error("Error detallado de Supabase:", error);
+      alert("Error de Supabase: " + error.message); // Ahora la alerta nos dirá el problema real
     }
   };
 
@@ -61,6 +74,14 @@ function Forum() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
+  };
+
+  const handleToggleHidePost = async (postId, currentState) => {
+    try { 
+      await toggleHidePost(postId, currentState);
+      loadPosts(); 
+    } 
+    catch (err) { alert("Error al modificar la publicación."); }
   };
 
   // --- Estado Derivado (Filtros y Orden) ---
@@ -113,10 +134,12 @@ function Forum() {
                   key={post.id} 
                   post={post} 
                   currentUser={currentUser}
+                  currentUserRole={currentUserRole}
                   onDeletePost={handleDeletePost}
                   onToggleLike={handleToggleLike}
                   onCreateComment={handleCreateComment}
                   onDeleteComment={handleDeleteComment}
+                  onToggleHidePost={handleToggleHidePost}
                 />
               ))
             )}
