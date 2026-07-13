@@ -24,11 +24,11 @@ function Register() {
       return;
     }
 
-    const regexCorreoUCT = /^[a-zA-Z0-9._%+-]+@alu\.uct\.cl$/;
-    if (!regexCorreoUCT.test(email)) {
-      setError("Debes usar un correo institucional válido (@alu.uct.cl).");
-      return;
-    }
+    //const regexCorreoUCT = /^[a-zA-Z0-9._%+-]+@alu\.uct\.cl$/;
+    //if (!regexCorreoUCT.test(email)) {
+     // setError("Debes usar un correo institucional válido (@alu.uct.cl).");
+     // return;
+    //}
 
     // 3. Llamar a Supabase para registrar al usuario
     const { data, error: supabaseError } = await supabase.auth.signUp({
