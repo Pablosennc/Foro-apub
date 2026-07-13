@@ -33,7 +33,7 @@ function Login() {
       console.error(supabaseError);
     } else {
       setMensaje("¡Inicio de sesión exitoso!");
-      Maps("/foro");
+      navigate("/foro");
       console.log("Usuario logueado:", data.user);
       // Más adelante, aquí redirigiremos a la página principal del foro
     }
